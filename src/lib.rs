@@ -36,6 +36,7 @@ use bevy::{
 };
 
 /// Plugin supporting world space UI.
+#[derive(Default)]
 pub struct WorldSpaceUiPlugin;
 impl Plugin for WorldSpaceUiPlugin {
     fn build(&self, app: &mut App) {
