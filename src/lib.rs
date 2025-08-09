@@ -2,6 +2,7 @@
 use bevy::{
     app::{App, First, Plugin},
     asset::{Assets, Handle, RenderAssetUsages},
+    color::Color,
     core_pipeline::core_2d::Camera2d,
     ecs::{
         component::{Component, HookContext},
@@ -26,7 +27,7 @@ use bevy::{
     },
     reflect::Reflect,
     render::{
-        camera::{Camera, NormalizedRenderTarget, RenderTarget},
+        camera::{Camera, ClearColorConfig, NormalizedRenderTarget, RenderTarget},
         mesh::{Indices, Mesh, Mesh3d, VertexAttributeValues},
         render_resource::{Extent3d, TextureDimension, TextureFormat, TextureUsages},
     },
@@ -87,6 +88,7 @@ impl WorldSpaceUiRoot {
                 Camera2d,
                 Camera {
                     target: RenderTarget::Image(root.texture.clone().into()),
+                    clear_color: ClearColorConfig::Custom(Color::NONE),
                     ..default()
                 },
             ))

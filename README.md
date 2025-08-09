@@ -68,4 +68,4 @@ See `examples` for a working demo.
 
 | bevy | bevy_world_space_ui  |
 | ---- | -------------------- |
-| 0.16 | 0.1.1                |
+| 0.16 | 0.1.3                |

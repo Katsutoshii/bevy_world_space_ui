@@ -1,7 +1,7 @@
 [package]
 edition = "2024"
 name = "bevy_world_space_ui"
-version = "0.1.2"
+version = "0.1.3"
 authors = ["Josiah Putman <joshikatsu@gmail.com>"]
 description = "Make building world space UIs easier in Bevy game engine."
 documentation = "https://docs.rs/bevy_world_space_ui/latest/bevy_world_space_ui"
