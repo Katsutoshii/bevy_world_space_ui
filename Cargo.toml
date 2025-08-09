@@ -16,16 +16,17 @@ exclude = ["assets/*"]
 bevy = { version = "0.16", default-features = false, features = [
     "std",
     "bevy_asset",
+    "bevy_image",
+    "bevy_mesh_picking_backend",
+    "bevy_pbr",
+    "bevy_picking",
     "bevy_render",
     "bevy_ui",
-    "bevy_picking",
-    "bevy_image",
+    "bevy_window",
 ] }
 
 [dev-dependencies]
 bevy = { version = "0.16" }
-bevy-inspector-egui = "0.31"
-bevy_egui = { version = "0.34", default-features = false }
 
 [[example]]
 name = "render_ui_on_quad"
