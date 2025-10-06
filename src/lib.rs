@@ -2,13 +2,14 @@
 use bevy::{
     app::{App, First, Plugin},
     asset::{Assets, Handle, RenderAssetUsages},
+    camera::{Camera, Camera2d, ClearColorConfig, NormalizedRenderTarget, RenderTarget},
     color::Color,
-    core_pipeline::core_2d::Camera2d,
     ecs::{
-        component::{Component, HookContext},
+        component::Component,
         entity::Entity,
         error::Result,
-        event::{EventReader, EventWriter},
+        lifecycle::HookContext,
+        message::{MessageReader, MessageWriter},
         name::Name,
         query::With,
         schedule::IntoScheduleConfigs,
@@ -17,20 +18,17 @@ use bevy::{
     },
     image::Image,
     input::{ButtonState, mouse::MouseButton},
-    math::{UVec2, Vec2, Vec3Swizzles},
+    math::{UVec2, Vec2},
+    mesh::Mesh3d,
     pbr::{MeshMaterial3d, StandardMaterial},
     picking::{
-        PickSet,
+        PickingSystems,
         backend::ray::RayMap,
-        mesh_picking::ray_cast::{MeshRayCast, MeshRayCastSettings, RayCastVisibility, RayMeshHit},
+        mesh_picking::ray_cast::{MeshRayCast, MeshRayCastSettings, RayCastVisibility},
         pointer::{Location, PointerAction, PointerButton, PointerId, PointerInput},
     },
     reflect::Reflect,
-    render::{
-        camera::{Camera, ClearColorConfig, NormalizedRenderTarget, RenderTarget},
-        mesh::{Indices, Mesh, Mesh3d, VertexAttributeValues},
-        render_resource::{Extent3d, TextureDimension, TextureFormat, TextureUsages},
-    },
+    render::render_resource::{Extent3d, TextureDimension, TextureFormat, TextureUsages},
     ui::UiTargetCamera,
     utils::default,
     window::{PrimaryWindow, WindowEvent},
@@ -47,7 +45,7 @@ impl Plugin for WorldSpaceUiPlugin {
                 First,
                 (drive_diegetic_pointer, send_pointer_input)
                     .chain()
-                    .in_set(PickSet::Input),
+                    .in_set(PickingSystems::Input),
             );
     }
 }
@@ -87,6 +85,8 @@ impl WorldSpaceUiRoot {
                 Name::new("UiTargetCamera"),
                 Camera2d,
                 Camera {
+                    // Render before the "main pass" camera
+                    order: -1,
                     target: RenderTarget::Image(root.texture.clone().into()),
                     clear_color: ClearColorConfig::Custom(Color::NONE),
                     ..default()
@@ -169,41 +169,6 @@ impl WorldSpaceUiSurface {
         // Spawn a virtual pointer so we can send events to the rendered UI.
         world.commands().spawn(surface.pointer_id);
     }
-
-    /// Computes the UV coordinates of a ray-mesh hit.
-    pub fn get_ray_mesh_hit_uv(hit: &RayMeshHit, mesh: &Mesh) -> Option<Vec2> {
-        let uvs = mesh.attribute(Mesh::ATTRIBUTE_UV_0);
-        let Some(VertexAttributeValues::Float32x2(uvs)) = uvs else {
-            return None;
-        };
-
-        let uvs: [Vec2; 3] = if let Some(indices) = mesh.indices() {
-            let i = hit.triangle_index.unwrap() * 3;
-            match indices {
-                Indices::U16(indices) => [
-                    Vec2::from(uvs[indices[i] as usize]),
-                    Vec2::from(uvs[indices[i + 1] as usize]),
-                    Vec2::from(uvs[indices[i + 2] as usize]),
-                ],
-                Indices::U32(indices) => [
-                    Vec2::from(uvs[indices[i] as usize]),
-                    Vec2::from(uvs[indices[i + 1] as usize]),
-                    Vec2::from(uvs[indices[i + 2] as usize]),
-                ],
-            }
-        } else {
-            let i = hit.triangle_index.unwrap() * 3;
-            [
-                Vec2::from(uvs[i]),
-                Vec2::from(uvs[i + 1]),
-                Vec2::from(uvs[i + 2]),
-            ]
-        };
-
-        let bc = hit.barycentric_coords.zxy();
-        let uv = bc.x * uvs[0] + bc.y * uvs[1] + bc.z * uvs[2];
-        Some(uv)
-    }
 }
 
 /// Because bevy has no way to know how to map a mouse input to the UI texture, we need to write a
@@ -217,11 +182,9 @@ fn drive_diegetic_pointer(
     mut surfaces: Query<(
         &WorldSpaceUiSurface,
         &WorldSpaceUiRenderTarget,
-        &Mesh3d,
         &mut PreviousCursorPosition,
     )>,
-    meshes: Res<Assets<Mesh>>,
-    mut pointer_input: EventWriter<PointerInput>,
+    mut pointer_inputs: MessageWriter<PointerInput>,
 ) -> Result {
     // Find raycast hits and update the virtual pointer.
     let raycast_settings = MeshRayCastSettings {
@@ -233,15 +196,11 @@ fn drive_diegetic_pointer(
 
     for (_id, ray) in rays.iter() {
         for (cube, hit) in raycast.cast_ray(*ray, &raycast_settings) {
-            let (surface, render_target, mesh_handle, mut cursor_last) = surfaces.get_mut(*cube)?;
-            let mesh = meshes.get(mesh_handle).unwrap();
-            let Some(uv) = WorldSpaceUiSurface::get_ray_mesh_hit_uv(hit, mesh) else {
-                continue;
-            };
+            let (surface, render_target, mut cursor_last) = surfaces.get_mut(*cube)?;
             hit_pointer_ids.push(surface.pointer_id);
-            let position = render_target.size.as_vec2() * uv;
+            let position = render_target.size.as_vec2() * hit.uv.unwrap();
             if position != cursor_last.0 {
-                pointer_input.write(PointerInput::new(
+                pointer_inputs.write(PointerInput::new(
                     surface.pointer_id,
                     Location {
                         target: render_target.target.clone(),
@@ -266,8 +225,8 @@ fn send_pointer_input(
         &WorldSpaceUiRenderTarget,
         &PreviousCursorPosition,
     )>,
-    mut window_events: EventReader<WindowEvent>,
-    mut pointer_input: EventWriter<PointerInput>,
+    mut window_events: MessageReader<WindowEvent>,
+    mut pointer_input: MessageWriter<PointerInput>,
 ) {
     // Pipe pointer button presses to the virtual pointer on the UI texture.
     for window_event in window_events.read() {

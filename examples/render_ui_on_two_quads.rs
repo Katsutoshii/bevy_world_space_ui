@@ -5,7 +5,7 @@ use std::f32::consts::PI;
 use bevy::{
     asset::uuid::Uuid,
     color::palettes::css::{BLUE, GRAY, GREEN, RED},
-    ecs::{component::HookContext, world::DeferredWorld},
+    ecs::{lifecycle::HookContext, world::DeferredWorld},
     picking::pointer::PointerId,
     prelude::*,
     render::render_resource::Extent3d,
@@ -60,20 +60,17 @@ impl HoverableButton {
                 TextColor::WHITE,
             ));
     }
-    fn on_over(pointer: Trigger<Pointer<Over>>, mut colors: Query<&mut BackgroundColor>) {
-        colors.get_mut(pointer.target()).unwrap().0 = RED.into();
+    fn on_over(pointer: On<Pointer<Over>>, mut colors: Query<&mut BackgroundColor>) {
+        colors.get_mut(pointer.event().entity).unwrap().0 = RED.into();
     }
-    fn on_release(pointer: Trigger<Pointer<Released>>, mut colors: Query<&mut BackgroundColor>) {
-        colors.get_mut(pointer.target()).unwrap().0 = RED.into();
+    fn on_release(pointer: On<Pointer<Release>>, mut colors: Query<&mut BackgroundColor>) {
+        colors.get_mut(pointer.event().entity).unwrap().0 = RED.into();
     }
-    fn on_out(pointer: Trigger<Pointer<Out>>, mut colors: Query<&mut BackgroundColor>) {
-        colors.get_mut(pointer.target()).unwrap().0 = BLUE.into();
+    fn on_out(pointer: On<Pointer<Out>>, mut colors: Query<&mut BackgroundColor>) {
+        colors.get_mut(pointer.event().entity).unwrap().0 = BLUE.into();
     }
-    fn on_click(
-        pointer: Trigger<Pointer<Pressed>>,
-        mut query: Query<(&Self, &mut BackgroundColor)>,
-    ) {
-        let (button, mut color) = query.get_mut(pointer.target()).unwrap();
+    fn on_click(pointer: On<Pointer<Press>>, mut query: Query<(&Self, &mut BackgroundColor)>) {
+        let (button, mut color) = query.get_mut(pointer.event().entity).unwrap();
         *color = GREEN.into();
         info!("{}", button.on_click_message);
     }
