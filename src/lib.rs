@@ -84,10 +84,10 @@ impl WorldSpaceUiRoot {
             .spawn((
                 Name::new("UiTargetCamera"),
                 Camera2d,
+                RenderTarget::Image(root.texture.clone().into()),
                 Camera {
                     // Render before the "main pass" camera
                     order: -1,
-                    target: RenderTarget::Image(root.texture.clone().into()),
                     clear_color: ClearColorConfig::Custom(Color::NONE),
                     ..default()
                 },
@@ -152,8 +152,8 @@ impl WorldSpaceUiSurface {
             .single(&world)
             .ok();
         let ui_camera_entity = world.entity(surface.root).components::<&UiTargetCamera>().0;
-        let ui_camera = world.entity(ui_camera_entity).components::<&Camera>();
-        let target = ui_camera.target.normalize(primary_window).unwrap();
+        let render_target = world.entity(ui_camera_entity).components::<&RenderTarget>();
+        let target = render_target.normalize(primary_window).unwrap();
         let size = world
             .resource::<Assets<Image>>()
             .get(&surface.texture)
