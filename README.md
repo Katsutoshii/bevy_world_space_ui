@@ -6,6 +6,8 @@
 
 Make building world space UIs easier in Bevy game engine.
 
+Based on the official example [render-ui-to-texture](https://bevy.org/examples/ui-user-interface/render-ui-to-texture/).
+
 ## Usage
 
 ```rs
@@ -68,5 +70,6 @@ See `examples` for a working demo.
 
 | bevy | bevy_world_space_ui  |
 | ---- | -------------------- |
+| 0.18 | 0.18.0               |
 | 0.17 | 0.2.0                |
 | 0.16 | 0.1.3                |

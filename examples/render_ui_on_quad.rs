@@ -43,9 +43,9 @@ fn main() {
         height: Val::Auto,
         align_items: AlignItems::Center,
         padding: UiRect::all(Val::Px(20.)),
+        border_radius: BorderRadius::all(Val::Px(10.)),
         ..default()
     },
-    BorderRadius::all(Val::Px(10.)),
     BackgroundColor(BLUE.into()),
 )]
 #[component(on_add = HoverableButton::on_add)]
