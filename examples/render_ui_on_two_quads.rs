@@ -1,5 +1,5 @@
 //! Shows how to render UI to a texture. Useful for displaying UI in 3D space.
-
+//! `cargo run --example render_ui_on_two_quads`
 use std::f32::consts::PI;
 
 use bevy::{

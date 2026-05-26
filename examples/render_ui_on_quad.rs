@@ -1,5 +1,5 @@
 //! Shows how to render UI to a texture. Useful for displaying UI in 3D space.
-
+//! `cargo run --example render_ui_on_quad`
 use std::f32::consts::PI;
 
 use bevy::{
@@ -10,14 +10,26 @@ use bevy::{
     prelude::*,
     render::render_resource::Extent3d,
 };
+use bevy_inspector_egui::{
+    bevy_egui::{EguiGlobalSettings, EguiPlugin, PrimaryEguiContext},
+    quick::WorldInspectorPlugin,
+};
 use bevy_world_space_ui::{WorldSpaceUiPlugin, WorldSpaceUiRoot, WorldSpaceUiSurface};
 
 const WORLD_SPACE_UI_POINTER: PointerId =
     PointerId::Custom(Uuid::from_u128(235172396560254989313697768709775153593));
 
 fn main() {
-    App::new()
-        .add_plugins((DefaultPlugins, WorldSpaceUiPlugin))
+    let mut app = App::new();
+    app.add_plugins(DefaultPlugins);
+    if cfg!(feature = "debug") {
+        app.add_plugins((EguiPlugin::default(), WorldInspectorPlugin::default()))
+            .insert_resource(EguiGlobalSettings {
+                auto_create_primary_context: false,
+                ..default()
+            });
+    }
+    app.add_plugins(WorldSpaceUiPlugin)
         .add_systems(Startup, setup)
         .run();
 }
@@ -125,6 +137,7 @@ fn setup(
     commands.spawn((
         Camera3d::default(),
         Transform::from_xyz(0.0, 0.0, 5.0).looking_at(Vec3::ZERO, Vec3::Y),
+        PrimaryEguiContext,
     ));
 
     // Light.
