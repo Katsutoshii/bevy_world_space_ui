@@ -70,6 +70,7 @@ See `examples` for a working demo.
 
 | bevy | bevy_world_space_ui  |
 | ---- | -------------------- |
+| 0.19 | 0.19.0               |
 | 0.18 | 0.18.0               |
 | 0.17 | 0.2.0                |
 | 0.16 | 0.1.3                |
