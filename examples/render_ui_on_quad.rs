@@ -64,7 +64,7 @@ impl HoverableButton {
             .with_child((
                 Text::new("Click me!"),
                 TextFont {
-                    font_size: 40.0,
+                    font_size: FontSize::Px(40.),
                     ..default()
                 },
                 TextColor::WHITE,
